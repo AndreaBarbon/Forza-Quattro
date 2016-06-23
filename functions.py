@@ -136,6 +136,18 @@ def ForwardProp(X0, w):
     X1  = Sigmoid( np.dot( X0, w.T ) )
     return X1
 
+def Predict(inp, x, y, sess, keep_prob):
+    return sess.run(y, feed_dict={x: [inp], keep_prob: 1.0} )[0]
+
+def ResponseTF(table, x, y, sess, keep_prob):
+    
+    inp = Input(table)
+    Y   = Sigmoid(Predict(inp, x, y, sess, keep_prob))
+    for i in range(0, COLS):
+        if ( IsColFull(table,i) ): Y[i] = 0
+    
+    return np.argmax(Y)
+
 def Response(table, w, full=False):
     
     X0  = Input(table)
@@ -168,7 +180,7 @@ def RandomMove(table, moves, x):
         i = np.random.randint(0, COLS)
         table, ok = DropIn(table,i,1)
     moves.append(i)
-    x = Winner(board)
+    x = Winner(table)
     if x > 0 : return table, moves, x
     
     ok = False  
@@ -176,10 +188,26 @@ def RandomMove(table, moves, x):
         i = np.random.randint(0, COLS)
         table, ok = DropIn(table,i,2)
     moves.append(i)
-    x = Winner(board)
+    x = Winner(table)
     return table, moves, x
 
-def RandomMatch(table, moves, x):
+def RandomMatch2(w1=None):
+    table, moves, x = NewTable(), [], 0
+    
+    for i in range(0,int(ROWS*COLS/2) ):
+        
+        if w1:
+            table, ok = DropIn(table, Response(table, w1), 1)
+            x = Winner(table)
+        else:
+            table, moves, x = RandomMove(table, moves, x)
+        
+        if x > 0 : break
+    
+    return table, moves, x
+
+def RandomMatch():
+    table, moves, x = NewTable(), [], 0
     for i in range(0,int(ROWS*COLS/2) ):
         table, moves, x = RandomMove(table, moves, x)
         if x > 0 : break
